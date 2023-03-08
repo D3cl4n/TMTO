@@ -12,7 +12,9 @@ class TMTO:
         return bin(n)[2:]
 
     def add_SP_EP(self, SP, EP):
-        self.chains.update({SP : EP})
+        self.chains.update({1 : SP, 2 : EP})
+        print(f"[+] Chain SP: {self.chains[1]}")
+        print(f"[+] Chain EP: {self.chains[2]}")
 
     def truncate(self, ciphertext, n):
         return ciphertext[:32 - n]
@@ -23,9 +25,17 @@ class TMTO:
         chain_sp = self.truncate(hashlib.sha256(str(starting_point).encode("utf-8")).hexdigest(), 16)
         print(f"[+] Starting chain generation at: {chain_sp}")
 
-        while starting_point <= cnt[self.t / 8]:
-
-            starting_point += 1
+        counter = 1
+        tmp = chain_sp
+        while counter <= cnt[self.t / 8]:
+            ciphertext = self.truncate(hashlib.sha256(str(tmp).encode("utf-8")).hexdigest(), 16)
+            tmp = ciphertext
+            if counter == cnt[self.t/8]:
+                print(f"[+] Finished {counter} SHA256 calculations")
+                print("[+] Reached end of chain calculation, storing SP and EP")
+                chain_ep = tmp
+                self.add_SP_EP(chain_sp, chain_ep)
+            counter += 1
 
 
 def main():
