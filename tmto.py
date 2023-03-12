@@ -24,13 +24,15 @@ class TMTO:
         print(f"[+] Re-computing the chain now looking for {sha_hash}")
         tmp = SP
         print(f"Starting at {SP}")
-        while True:
+        cnt = 0
+        while cnt < self.cnt[self.t / 8]:
             ciphertext = self.truncate(hashlib.sha256(str(tmp).encode("utf-8")).hexdigest(), 4)
             print(ciphertext)
             if ciphertext == sha_hash:
                 print("[+] We hit an endpoint")
                 return tmp #this is the previous input to SHA256 and the plaintext
             tmp = ciphertext
+            cnt += 1
 
     def compute_chains(self):
         starting_point = random.randint(0, self.cnt[self.t / 8])
@@ -59,6 +61,7 @@ class TMTO:
                 print(f"[+] Found endpoint {tmp} re-computing chain now")
                 plaintext = self.recompute_chain(self.chains[1], sha_hash)
                 print(f"[+] Recovered plaintext {plaintext} for hash {sha_hash} verifying...")
+                return
 
             counter += 1
 
@@ -68,7 +71,7 @@ Description: Driver code for the attack
 def main():
     tmto_attack = TMTO(16)
     tmto_attack.compute_chains()
-    tmto_attack.find_preimage("6f4b")
+    tmto_attack.find_preimage("55e1")
 
 if __name__ == '__main__':
     main()
