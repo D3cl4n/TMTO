@@ -18,14 +18,15 @@ class TMTO:
         print(f"[+] Chain EP: {self.chains[2]}")
 
     def truncate(self, ciphertext, n):
-        return ciphertext[:32 - n]
+        return ciphertext[:n]
 
     def recompute_chain(self, SP, sha_hash):
-        print("[+] Re-computing the chain now")
+        print(f"[+] Re-computing the chain now looking for {sha_hash}")
         tmp = SP
-        previous = ""
+        print(f"Starting at {SP}")
         while True:
-            ciphertext = self.truncate(hashlib.sha256(str(tmp).encode("utf-8")).hexdigest(), 16)
+            ciphertext = self.truncate(hashlib.sha256(str(tmp).encode("utf-8")).hexdigest(), 4)
+            print(ciphertext)
             if ciphertext == sha_hash:
                 print("[+] We hit an endpoint")
                 return tmp #this is the previous input to SHA256 and the plaintext
@@ -33,13 +34,13 @@ class TMTO:
 
     def compute_chains(self):
         starting_point = random.randint(0, self.cnt[self.t / 8])
-        chain_sp = self.truncate(hashlib.sha256(str(starting_point).encode("utf-8")).hexdigest(), 16)
+        chain_sp = self.truncate(hashlib.sha256(str(starting_point).encode("utf-8")).hexdigest(), 4)
         print(f"[+] Starting chain generation at: {chain_sp}")
 
         counter = 1
         tmp = chain_sp
         while counter <= self.cnt[self.t / 8]: #99 since we truncate SHA256 hash to 16 bits
-            ciphertext = self.truncate(hashlib.sha256(str(tmp).encode("utf-8")).hexdigest(), 16)
+            ciphertext = self.truncate(hashlib.sha256(str(tmp).encode("utf-8")).hexdigest(), 4)
             tmp = ciphertext
             if counter == self.cnt[self.t/8]:
                 print(f"[+] Finished {counter} SHA256 calculations")
@@ -52,9 +53,8 @@ class TMTO:
         print("[+] Now attempting to find pre-image")
         tmp = sha_hash
         counter = 0
-        print(self.cnt[self.t/8])
         while counter <= self.cnt[self.t/8]:
-            tmp = self.truncate(hashlib.sha256(str(tmp).encode("utf-8")).hexdigest(), 16)
+            tmp = self.truncate(hashlib.sha256(str(tmp).encode("utf-8")).hexdigest(), 4)
             if self.chains[2] == tmp:
                 print(f"[+] Found endpoint {tmp} re-computing chain now")
                 plaintext = self.recompute_chain(self.chains[1], sha_hash)
@@ -68,7 +68,7 @@ Description: Driver code for the attack
 def main():
     tmto_attack = TMTO(16)
     tmto_attack.compute_chains()
-    tmto_attack.find_preimage("6f4b6612125fb3a0")
+    tmto_attack.find_preimage("6f4b")
 
 if __name__ == '__main__':
     main()
