@@ -5,7 +5,7 @@ import random
 class TMTO:
     def __init__(self, t):
         self.t = t
-        self.modulus = 2^self.t
+        self.modulus = 2**self.t
         self.cnt = {2 : 2**16, 3 : 999, 4 : 9999}
         self.chains = {}
 
@@ -18,7 +18,7 @@ class TMTO:
         print(f"[+] Chain EP: {self.chains[2]}")
 
     def truncate(self, ciphertext, n):
-        return ciphertext[:n]
+        return hex((int(ciphertext, 16) % (2**16)))
 
     def recompute_chain(self, SP, sha_hash):
         print(f"[+] Re-computing the chain now looking for {sha_hash}")
