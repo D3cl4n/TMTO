@@ -18,7 +18,7 @@ class TMTO:
         print(f"[+] Chain EP: {self.chains[2]}")
 
     def truncate(self, ciphertext, n):
-        return hex((int(ciphertext, 16) % (2**16)))
+        return ciphertext[:n]
 
     def recompute_chain(self, SP, sha_hash):
         print(f"[+] Re-computing the chain now looking for {sha_hash}")
@@ -26,7 +26,7 @@ class TMTO:
         print(f"Starting at {SP}")
         cnt = 0
         while cnt < self.cnt[self.t / 8]:
-            ciphertext = self.truncate(hashlib.sha256(str(tmp).encode("utf-8")).hexdigest(), 4)
+            ciphertext = self.truncate(hashlib.sha256(bytes(int(tmp, 16))).hexdigest(), 4)
             print(ciphertext)
             if ciphertext == sha_hash:
                 print("[+] We hit an endpoint")
@@ -35,14 +35,14 @@ class TMTO:
             cnt += 1
 
     def compute_chains(self):
-        starting_point = random.randint(0, self.cnt[self.t / 8])
-        chain_sp = self.truncate(hashlib.sha256(str(starting_point).encode("utf-8")).hexdigest(), 4)
+        starting_point = random.randint(0, self.cnt[self.t / 8]) #random int between 2, 2**16
+        chain_sp = self.truncate(hashlib.sha256(bytes(66)).hexdigest(), 4)
         print(f"[+] Starting chain generation at: {chain_sp}")
 
         counter = 1
         tmp = chain_sp
         while counter <= self.cnt[self.t / 8]: #99 since we truncate SHA256 hash to 16 bits
-            ciphertext = self.truncate(hashlib.sha256(str(tmp).encode("utf-8")).hexdigest(), 4)
+            ciphertext = self.truncate(hashlib.sha256(bytes(int(tmp, 16))).hexdigest(), 4)
             tmp = ciphertext
             if counter == self.cnt[self.t/8]:
                 print(f"[+] Finished {counter} SHA256 calculations")
@@ -56,7 +56,8 @@ class TMTO:
         tmp = sha_hash
         counter = 0
         while counter <= self.cnt[self.t/8]:
-            tmp = self.truncate(hashlib.sha256(str(tmp).encode("utf-8")).hexdigest(), 4)
+            tmp = self.truncate(hashlib.sha256(bytes(int(tmp, 16))).hexdigest(), 4)
+            print(tmp)
             if self.chains[2] == tmp:
                 print(f"[+] Found endpoint {tmp} re-computing chain now")
                 plaintext = self.recompute_chain(self.chains[1], sha_hash)
