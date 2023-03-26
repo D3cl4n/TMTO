@@ -7,19 +7,29 @@ def encrypt(data, k):
 def encrypt_bits(data, k):
     return (int(hashlib.sha256(bytes(data)).hexdigest(), 16) % (2**20))
 
-def recompute_chain(SP, hash, n, k, flag):
+def non_trivial_recompute_chain(SP, hash, EP, k):
+    cnt = 0
+    prev = SP
+    print(hash)
+    while prev != EP:
+        print(type(prev))
+        ct = encrypt_bits(prev, k)
+        print(type(ct))
+        if bytes(ct) == bytes(hash):
+            return prev
+        prev = ct
+        cnt += 1
+
+    return "no pre-image"
+
+def recompute_chain(SP, hash, n, k):
     cnt = 0
     prev = SP
     print(hash)
     while cnt < n:
-        if flag == 0:
-            ct = encrypt(prev, k)
-            if ct == hash:
-                return prev
-        elif flag == 1:
-            ct = encrypt_bits(prev, k)
-            if bytes(ct) == bytes(hash):
-                return prev
+        ct = encrypt(prev, k)
+        if ct == hash:
+            return prev
         prev = ct
         cnt += 1
     
@@ -34,7 +44,7 @@ def non_trivial_find_pre_image(target, chains, n, k):
         if ct in values_list:
             print(f"[+] We hit an endpoint {ct} recomputing chain now")
             SP = [i for i, v in chains.items() if v == ct][0]
-            pre_image = recompute_chain(SP, target, n, k, 1)
+            pre_image = non_trivial_recompute_chain(SP, target, ct, k)
             return pre_image
         tmp = ct
         cnt += 1
@@ -89,7 +99,7 @@ def find_preimage(hash, n, k, EP, SP):
         ct = encrypt(tmp, k)
         if ct == EP:
             print(f"[+] We hit an endpoint, re-computing chain now")
-            return recompute_chain(SP, hash, n, k, 0)
+            return recompute_chain(SP, hash, n, k)
         tmp = ct
         cnt += 1
 
@@ -107,7 +117,7 @@ def main():
 
     t = 20
     n = 2**t
-    l = 2000
+    l = 5000
     target = bytearray.fromhex(str(0x84a8a))
     print(f"[+] There are {n} possible hashes")
     print(f"[+] Attempting to find the pre-image for the hash {target}")

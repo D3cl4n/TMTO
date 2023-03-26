@@ -1,58 +1,61 @@
 import hashlib
+import random
 
-def encrypt(data, k):
-    return hashlib.sha256(bytes(data)).digest()[-k:]
+def encrypt_bits(plaintext):
+    return bin(int(hashlib.sha256(bytes(int(plaintext, 2))).hexdigest(), 16))[:22][2:]
 
-def encrypt_bits(data, k):
-    return (int(hashlib.sha256(bytes(data)).hexdigest(), 16) % (2**20))
+def random_start():
+    start = ""
+    for x in range(0, 20):
+        bit = random.randint(0, 1)
+        start += str(bit)
 
-def recompute_chain(SP, hash, n, k, flag):
+    return bin(int(start, 2))[2:].zfill(20)
+
+def compute_chains(n, chain_length):
+    print(f"[+] Computing chains of length {chain_length}")
+    chains = {}
     cnt = 1
-    prev = SP
-    print(hash)
-    print(n)
+    SP = random_start()
+    tmp = SP
     while cnt <= n:
-        ct = encrypt_bits(prev, k)
-        if flag == 0:
-            if ct == hash:
-                return prev
-            cnt += 1
-            prev = ct
-        elif flag == 1:
-            print(type(ct))
-            if bytes(ct) == bytes(hash):
-                return prev
-            cnt += 1
-            prev = ct
-    
-    return None
-
-def non_trivial_find_pre_image(target, chains, n, k):
-    cnt = 1
-    tmp = target
-    values_list = chains.values()
-    while cnt <= n:
-        ct = encrypt_bits(tmp, k)
-        if ct in values_list:
-            print(f"[+] We hit an endpoint {ct} recomputing chain now")
-            SP = [k for k, v in chains.items() if v == ct][0]
-            print("SP is: ", SP)
-            pre_image = recompute_chain(SP, target, n, k, 1)
-            print("returning")
-            return pre_image
-        tmp = ct
+        if cnt % chain_length == 0:
+            chains.update({SP : tmp})
+            SP = tmp
+        ct = encrypt_bits(tmp)
         cnt += 1
+        tmp = ct
     
-    return None
+    return chains
+
+def verify_chains(chains, chain_length):
+    print("[+] Verifying chains were computed correctly")
+    SP = list(chains.keys())[0]
+    EP = chains[next(iter(chains))]
+
+    flag = 1
+    tmp = SP
+    for x in range(1, chain_length):
+        ct = encrypt_bits(tmp)
+        tmp = ct
+
+    if tmp == EP:
+        flag = 0
+
+    return flag
 
 def main():
     t = 20
     n = 2**t
-    k = 2
-    target = bytearray.fromhex(str(0x812c4))
-    chain = {270661 : 502005}
-    pre_image = non_trivial_find_pre_image(target, chain, n, k)
-    print(f"[+] We found the pre-image for the hash {pre_image}\n")
+    chain_length = 2000
+    target = random_start()
+    chains = compute_chains(n, chain_length)
+    print(chains)
+    if verify_chains(chains, chain_length) != 0:
+        print("[+] Chains were not computed correctly")
+        exit(-1)
+    else:
+        print("[+] Chains were computed correctly")
 
 if __name__ == '__main__':
     main()
