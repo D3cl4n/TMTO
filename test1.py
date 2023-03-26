@@ -30,8 +30,8 @@ def compute_chains(n, chain_length):
 
 def verify_chains(chains, chain_length):
     print("[+] Verifying chains were computed correctly")
-    SP = list(chains.keys())[0]
-    EP = chains[next(iter(chains))]
+    SP = list(chains.keys())[1]
+    EP = chains[next(next(iter(chains)))]
 
     flag = 1
     tmp = SP
