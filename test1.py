@@ -13,6 +13,15 @@ def random_start():
 
     return bin(int(start, 2))[2:].zfill(20)
 
+def recompute_chain(SP, EP, target):
+    while SP != EP:
+        prev = SP
+        SP = encrypt_bits(SP)
+        if SP == target:
+            return prev
+    
+    return None
+
 def tmto_attack(target, n, chains, chain_length):
     print(f"[+] Trying to find pre-image for {target}")
     cnt = 1
@@ -23,8 +32,11 @@ def tmto_attack(target, n, chains, chain_length):
             SP = [i for i in chains if chains[i] == ct]
             print(f"[+] We hit an endpoint {ct}")
             print(f"[+] Corresponding SP {SP}")
+            return recompute_chain(SP, ct, target)
         tmp = ct
         cnt += 1
+
+    return "No pre-image found"
 
 def compute_chains(n, chain_length):
     print(f"[+] Computing chains of length {chain_length}")
@@ -49,6 +61,8 @@ def verify_chains(chains, chain_length):
     val = next(iterator)
     val = next(iterator)
     EP = chains[val]
+    print(f"[+] SP: {SP}")
+    print(f"[+] EP: {EP}")
 
     flag = 1
     tmp = SP
