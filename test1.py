@@ -1,4 +1,5 @@
 import hashlib
+from itertools import chain
 import random
 
 def encrypt_bits(plaintext):
@@ -11,6 +12,19 @@ def random_start():
         start += str(bit)
 
     return bin(int(start, 2))[2:].zfill(20)
+
+def tmto_attack(target, n, chains, chain_length):
+    print(f"[+] Trying to find pre-image for {target}")
+    cnt = 1
+    tmp = target
+    while cnt <= n:
+        ct = encrypt_bits(tmp)
+        if ct in list(chains.values()):
+            SP = [i for i in chains if chains[i] == ct]
+            print(f"[+] We hit an endpoint {ct}")
+            print(f"[+] Corresponding SP {SP}")
+        tmp = ct
+        cnt += 1
 
 def compute_chains(n, chain_length):
     print(f"[+] Computing chains of length {chain_length}")
@@ -31,7 +45,10 @@ def compute_chains(n, chain_length):
 def verify_chains(chains, chain_length):
     print("[+] Verifying chains were computed correctly")
     SP = list(chains.keys())[1]
-    EP = chains[next(next(iter(chains)))]
+    iterator = iter(chains)
+    val = next(iterator)
+    val = next(iterator)
+    EP = chains[val]
 
     flag = 1
     tmp = SP
@@ -47,7 +64,7 @@ def verify_chains(chains, chain_length):
 def main():
     t = 20
     n = 2**t
-    chain_length = 2000
+    chain_length = 1000
     target = random_start()
     chains = compute_chains(n, chain_length)
     print(chains)
@@ -56,6 +73,8 @@ def main():
         exit(-1)
     else:
         print("[+] Chains were computed correctly")
+    
+    pre_image = tmto_attack(target, n, chains, chain_length)
 
 if __name__ == '__main__':
     main()
